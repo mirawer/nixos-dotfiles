@@ -70,6 +70,7 @@
 
                 ./hardware.nix
                 ./wireguard.nix
+                ./tor.nix
                 ./noctalia
 
                 # ------------------------------------------------
