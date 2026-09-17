@@ -69,6 +69,7 @@
               modules = [
 
                 ./hardware.nix
+                ./wireguard.nix
                 ./noctalia
 
                 # ------------------------------------------------
