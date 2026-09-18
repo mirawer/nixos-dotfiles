@@ -300,10 +300,6 @@
 
                         # --- Session variables ---
                         home.sessionVariables = {
-                          # The pi-config repo is the whole of ~/.pi, so pi has to
-                          # look there instead of the default ~/.pi/agent
-                          PI_CODING_AGENT_DIR = "${config.home.homeDirectory}/.pi";
-
                           # Playwright on NixOS cannot run a binary fetched by npx
                           PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
                           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
@@ -329,9 +325,9 @@
                           initExtra = ''
                             piv() {
                               if [ -n "$TMUX" ]; then
-                                cd "$HOME/Obsidian Vault/AI" && pi "$@"
+                                cd "$HOME/Obsidian Vault/PI" && pi "$@"
                               else
-                                tmux new-session -A -s vault -c "$HOME/Obsidian Vault/AI" pi "$@"
+                                tmux new-session -A -s vault -c "$HOME/Obsidian Vault/PI" pi "$@"
                               fi
                             }
                           '';
