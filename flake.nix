@@ -7,7 +7,7 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-26.05";
 
-    # Only for pi-coding-agent — the 26.05 version is too old
+    # Only for the coding agents (pi, codex) — the 26.05 versions are too old
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -69,6 +69,7 @@
               modules = [
 
                 ./hardware.nix
+                ./syncthing.nix
                 ./wireguard.nix
                 ./tor.nix
                 ./noctalia
@@ -88,11 +89,12 @@
                   {
                     nixpkgs.config.allowUnfree = true;
 
-                    # Pull a single package from unstable, leave the rest on 26.05
+                    # Pull a few packages from unstable, leave the rest on 26.05
                     nixpkgs.overlays = [
                       (final: prev: {
                         inherit (inputs.nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system})
                           pi-coding-agent
+                          codex
                           ;
                       })
                     ];
@@ -216,6 +218,11 @@
 
                         # Text-mode VM: qemu-system-x86_64 -nographic
                         qemu_kvm
+
+                        # Minecraft launcher
+                        prismlauncher
+                        
+
                       ]
                       # Packages coming from flake inputs, not from pkgs
                       ++ [
@@ -288,14 +295,24 @@
                           # Neovim tooling
                           ripgrep
                           fd
+                          
+                          # Vis ( leprzy vim ) 
+                          vis
+
 
                           # pi
                           pi-coding-agent
-                          tmux
+
+                          # Codex CLI (OpenAI) — z unstable, patrz overlay wyzej
+                          codex
+
                           nodejs_22
                           yt-dlp
                           ffmpeg
                           sox
+
+                          # Trener pisania w terminalu — brak w nixpkgs, budowany ze zrodel
+                          (callPackage ./keybr-tui.nix { })
                         ];
 
                         # --- Session variables ---
@@ -305,12 +322,56 @@
                           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
                         };
 
+                        # --- tmux ---
+                        # extended-keys: bez tego tmux tlumi rozszerzone sekwencje
+                        # klawiszy (CSI u), przez co pi nie odroznia Shift+Enter
+                        # od zwyklego Entera.
+                        programs.tmux = {
+                          enable = true;
+                          extraConfig = ''
+                            set -g extended-keys on
+                            set -g extended-keys-format csi-u
+                          '';
+                        };
+
+                        # --- Starship prompt ---
+                        # settings trafia do ~/.config/starship.toml (generowany,
+                        # read-only) — nie edytowac tego pliku recznie, tylko tutaj.
+                        # Integracja z bashem wlacza sie sama wraz z programs.bash.
+                        programs.starship = {
+                          enable = true;
+
+                          # Ikony z Nerd Fonts — sa juz zainstalowane w systemie
+                          presets = [ "nerd-font-symbols" ];
+
+                          settings = {
+                            add_newline = true;
+
+                            # Kolor strzalki jako status ostatniej komendy
+                            character = {
+                              success_symbol = "[➜](bold green)";
+                              error_symbol = "[➜](bold red)";
+                            };
+
+                            # Pelna sciezka gubi sie w waskim panelu tmuxa
+                            directory.truncation_length = 3;
+
+                            # Czas tylko dla komend, ktore faktycznie trwaly
+                            cmd_duration.min_time = 2000;
+
+                            # "is 󰏗 v0.1.0" z Cargo.toml/package.json — wersja
+                            # projektu i tak jest w pliku, a zjada pol linii
+                            package.disabled = true;
+                          };
+                        };
+
                         # --- Bash ---
                         programs.bash = {
                           enable = true;
 
                           shellAliases = {
                             btw = "echo I use nixos, btw";
+                            pisanie = "keybr-tui --target-wpm 80";
                             cpp11 = "clang++ -std=c++11 -Wall -Weffc++ -Wextra -Wconversion -Wsign-conversion -Werror";
                             cpp14 = "clang++ -std=c++14 -Wall -Weffc++ -Wextra -Wconversion -Wsign-conversion -Werror";
                             cpp17 = "clang++ -std=c++17 -Wall -Weffc++ -Wextra -Wconversion -Wsign-conversion -Werror";
