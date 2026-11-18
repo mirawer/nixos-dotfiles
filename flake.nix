@@ -172,6 +172,7 @@
                     environment.systemPackages =
                       with pkgs;
                       [
+                        nixfmt
                         claude-code
                         obsidian
                         vim
@@ -221,7 +222,6 @@
 
                         # Minecraft launcher
                         prismlauncher
-                        
 
                       ]
                       # Packages coming from flake inputs, not from pkgs
@@ -265,8 +265,10 @@
                         # --- Git ---
                         programs.git = {
                           enable = true;
-                          userName = "mirawer";
-                          userEmail = "michaljanwernik@gmail.com";
+                          settings.user = {
+                            name = "mirawer";
+                            email = "michaljanwernik@gmail.com";
+                          };
 
                           # University repos use the PW address instead
                           includes = [
@@ -295,10 +297,9 @@
                           # Neovim tooling
                           ripgrep
                           fd
-                          
-                          # Vis ( leprzy vim ) 
-                          vis
 
+                          # Vis ( leprzy vim )
+                          vis
 
                           # pi
                           pi-coding-agent
